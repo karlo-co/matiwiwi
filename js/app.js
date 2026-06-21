@@ -86,13 +86,37 @@ function actualizarResumenCompra() {
 
   if (lineas.length === 0) {
     resumen.textContent = "Resumen de compra pendiente.";
-    detalle.value = "";
+    detalle.innerHTML = "";
     return;
   }
 
-  const texto = lineas.join(" | ") + ` | TOTAL: $${total}`;
-  resumen.textContent = texto;
-  detalle.value = texto;
+  // Cada producto en su propia fila. Separa nombre y precio por " = "
+  const filas = lineas.map(l => {
+    const partes = l.split(" = ");
+    if (partes.length === 2) {
+      return `<tr>
+        <td style="padding:6px 10px; border-bottom:1px solid #ddd;">${partes[0]}</td>
+        <td style="padding:6px 10px; border-bottom:1px solid #ddd; text-align:right;">${partes[1]}</td>
+      </tr>`;
+    }
+    // Líneas sin "=" (ej. la Fecha) ocupan toda la fila
+    return `<tr>
+      <td colspan="2" style="padding:6px 10px; border-bottom:1px solid #ddd; color:#666;">${l}</td>
+    </tr>`;
+  }).join("");
+
+  detalle.innerHTML = `
+    <table style="border-collapse:collapse; width:100%; max-width:420px; font-family:Arial, sans-serif; font-size:14px;">
+      <tbody>
+        ${filas}
+        <tr>
+          <td style="padding:8px 10px; font-weight:bold;">TOTAL</td>
+          <td style="padding:8px 10px; text-align:right; font-weight:bold;">$${total}</td>
+        </tr>
+      </tbody>
+    </table>`;
+
+  resumen.textContent = `TOTAL: $${total}`;
 }
 
 // ---------- Validación del formulario de COMPRA ----------
@@ -134,7 +158,7 @@ document.getElementById("formCompra").addEventListener("submit", function(event)
   if (!hayError) {
     const fecha = new Date().toLocaleString("es-CL");
     const texto = lineas.join(" | ") + ` | TOTAL: $${total}`;
-    document.getElementById("detalleProducto").value = `Fecha: ${fecha} | ${texto}`;
+    document.getElementById("detalleProducto").innerHTML = `Fecha: ${fecha} | ${texto}`;
   }
 
   if (hayError) {
