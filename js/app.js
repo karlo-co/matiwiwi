@@ -19,6 +19,16 @@ function limpiarError(idCampo) {
   if (span) span.textContent = "";
 }
 
+// Crea un campo oculto en el formulario (cada uno se ve como una fila en el correo)
+function agregarCampoOculto(form, nombre, valor) {
+  const input = document.createElement("input");
+  input.type = "hidden";
+  input.name = nombre;
+  input.value = valor;
+  input.classList.add("boleta-item"); // marca para poder limpiarlos antes de reenviar
+  form.appendChild(input);
+}
+
 // ---------- Cargar productos desde el JSON ----------
 fetch("data/productos.json")
   .then(respuesta => respuesta.json())
@@ -86,37 +96,13 @@ function actualizarResumenCompra() {
 
   if (lineas.length === 0) {
     resumen.textContent = "Resumen de compra pendiente.";
-    detalle.innerHTML = "";
+    detalle.value = "";
     return;
   }
 
-  // Cada producto en su propia fila. Separa nombre y precio por " = "
-  const filas = lineas.map(l => {
-    const partes = l.split(" = ");
-    if (partes.length === 2) {
-      return `<tr>
-        <td style="padding:6px 10px; border-bottom:1px solid #ddd;">${partes[0]}</td>
-        <td style="padding:6px 10px; border-bottom:1px solid #ddd; text-align:right;">${partes[1]}</td>
-      </tr>`;
-    }
-    // Líneas sin "=" (ej. la Fecha) ocupan toda la fila
-    return `<tr>
-      <td colspan="2" style="padding:6px 10px; border-bottom:1px solid #ddd; color:#666;">${l}</td>
-    </tr>`;
-  }).join("");
-
-  detalle.innerHTML = `
-    <table style="border-collapse:collapse; width:100%; max-width:420px; font-family:Arial, sans-serif; font-size:14px;">
-      <tbody>
-        ${filas}
-        <tr>
-          <td style="padding:8px 10px; font-weight:bold;">TOTAL</td>
-          <td style="padding:8px 10px; text-align:right; font-weight:bold;">$${total}</td>
-        </tr>
-      </tbody>
-    </table>`;
-
-  resumen.textContent = `TOTAL: $${total}`;
+  const texto = lineas.join(" | ") + ` | TOTAL: $${total}`;
+  resumen.textContent = texto;
+  detalle.value = texto;
 }
 
 // ---------- Validación del formulario de COMPRA ----------
@@ -154,11 +140,36 @@ document.getElementById("formCompra").addEventListener("submit", function(event)
     hayError = true;
   }
 
-  // Agregamos la fecha a la boleta que se envía por correo
+  // Si todo está bien, armamos la boleta con un campo por producto
   if (!hayError) {
+    const form = this;
+
+    // Limpiar campos de una boleta anterior (por si el usuario reenvía)
+    form.querySelectorAll(".boleta-item").forEach(el => el.remove());
+
+    // Fecha de la compra
     const fecha = new Date().toLocaleString("es-CL");
-    const texto = lineas.join(" | ") + ` | TOTAL: $${total}`;
-    document.getElementById("detalleProducto").innerHTML = `Fecha: ${fecha} | ${texto}`;
+    agregarCampoOculto(form, "Fecha", fecha);
+
+    // Un campo (fila) por cada producto seleccionado, con su detalle individual
+    let numero = 1;
+    document.querySelectorAll(".cant-producto").forEach(input => {
+      const cantidad = Number(input.value);
+      const id = Number(input.dataset.id);
+      const producto = productos.find(p => p.id === id);
+
+      if (producto && cantidad > 0) {
+        const subtotal = producto.precio * cantidad;
+        const detalle =
+          `${producto.nombre} | Cantidad: ${cantidad} | ` +
+          `Precio unitario: $${producto.precio} | Subtotal: $${subtotal}`;
+        agregarCampoOculto(form, `Producto ${numero}`, detalle);
+        numero++;
+      }
+    });
+
+    // Total general como última fila
+    agregarCampoOculto(form, "TOTAL", `$${total}`);
   }
 
   if (hayError) {
