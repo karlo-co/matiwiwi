@@ -47,8 +47,9 @@
         <input type="hidden" name="_template" value="table">
         <input type="hidden" name="_captcha" value="false">
         <input type="hidden" name="_next" value="https://karlo-co.github.io/matiwiwi/gracias.html">
-        
-        <input type="hidden" id="detalleProducto" name="detalle_producto">
+
+        <!-- Solo para el resumen en pantalla; el detalle real se envía por producto desde app.js -->
+        <input type="hidden" id="detalleProducto">
 
         <label for="nombreCompra">Nombre cliente:</label>
         <input type="text" id="nombreCompra" name="nombre_cliente">
@@ -73,7 +74,7 @@
         <input type="hidden" name="_template" value="table">
         <input type="hidden" name="_captcha" value="false">
         <input type="hidden" name="_next" value="https://karlo-co.github.io/matiwiwi/gracias.html">
-        
+
         <label for="nombreContacto">Nombre:</label>
         <input type="text" id="nombreContacto" name="nombre">
         <span id="error-nombreContacto" class="error"></span>
